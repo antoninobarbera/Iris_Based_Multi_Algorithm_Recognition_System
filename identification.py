@@ -1,25 +1,30 @@
-import cv2 as cv
-import joblib
 import os
+import sys
+import joblib
+import cv2 as cv
 from tools.matching_score import matching_score_class
 
 class id_class:
 
-    __slots__ = ['config', 'scaler', 'feature_reduction', 'classifier_1', 'classifier_2', 'classifier_3', 'data_dict']
+    __slots__ = ['config', 'are_models_loaded','scaler', 'feature_reduction', 'classifier_1', 'classifier_2', 'classifier_3', 'data_dict']
 
-    def __init__(self, config, data_dict):
-        scaler_path = os.path.join('checkpoints', 'standard_scaler.pkl')
-        self.scaler = joblib.load(scaler_path)
-        feature_reduction_path = os.path.join('checkpoints', 'lle_feature_reduction.pkl')
-        self.feature_reduction = joblib.load(feature_reduction_path)
-        classifier_1_path = os.path.join('checkpoints', 'knn_model.pkl')
-        self.classifier_1 = joblib.load(classifier_1_path)
-        classifier_2_path = os.path.join('checkpoints', 'svm_model.pkl')
-        self.classifier_2 = joblib.load(classifier_2_path)
-        classifier_3_path = os.path.join('checkpoints', 'nn_model.pkl')
-        self.classifier_3 = joblib.load(classifier_3_path)
+    def __init__(self, config, data_dict=None):
         self.config = config
-        self.data_dict = data_dict
+        if data_dict is not None:
+           self.are_models_loaded = True
+           scaler_path = os.path.join('checkpoints', 'standard_scaler.pkl')
+           self.scaler = joblib.load(scaler_path)
+           feature_reduction_path = os.path.join('checkpoints', 'lle_feature_reduction.pkl')
+           self.feature_reduction = joblib.load(feature_reduction_path)
+           classifier_1_path = os.path.join('checkpoints', 'knn_model.pkl')
+           self.classifier_1 = joblib.load(classifier_1_path)
+           classifier_2_path = os.path.join('checkpoints', 'svm_model.pkl')
+           self.classifier_2 = joblib.load(classifier_2_path)
+           classifier_3_path = os.path.join('checkpoints', 'nn_model.pkl')
+           self.classifier_3 = joblib.load(classifier_3_path)        
+           self.data_dict = data_dict
+        else:
+            self.are_models_loaded = False
 
     
     def sift_match(self, iris_1, iris_2):
@@ -46,8 +51,12 @@ class id_class:
         else:
             flag = False
         return flag
+        
     
     def identification(self, iris):
+       if not self.are_models_loaded:
+           print(' MODELS ARE NOT UPLOADED --- RUN models_generation.py')
+           sys.exit()
        iris_code = [iris.get_iris_code()]
        iris_code_scaled = self.scaler.transform(iris_code)
        iris_code_red = self.feature_reduction.transform(iris_code_scaled)
@@ -74,24 +83,6 @@ class id_class:
            return True, result[0]
        else:
            return False, None
-              
-        
-
-        
-
-
-
-
-       
-
-       flag = classifier_1_match and classifier_2_match and classifier_3_match
-       return flag
     
 
-    def match(self, iris_1, iris_2):
-       if self.sift_match(iris_1, iris_2):
-           return True
-       else:
-           return self.ml_match(iris_1, iris_2)
-      
-           
+    

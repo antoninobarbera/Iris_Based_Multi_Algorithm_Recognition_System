@@ -3,7 +3,6 @@ import numpy as np
 from tools.segmentation import *
 from tools.utils import point_in_circle, draw_keypoints_image, warp_polar, encoding
 
-
 class iris_class:
     __slots__ = ['image', 'config', 'centre', 'idx',
                 'pupil_radius', 'iris_radius', 'segmented',
@@ -55,6 +54,9 @@ class iris_class:
 
     def get_idx(self):
         return self.idx
+    
+    def get_image(self):
+        return self.image
  
     def get_iris_code(self):
         return self.iris_code
@@ -71,7 +73,11 @@ class iris_class:
     def get_keypoints_image(self):
         return self.keypoints_image
     
+    def get_normalized_image(self):
+        return self.normalize
+    
     def get_attributes(self):
         return self.centre, self.pupil_radius, self.iris_radius
     
+   
     

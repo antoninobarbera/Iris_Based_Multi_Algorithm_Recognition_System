@@ -1,0 +1,9 @@
+CASIA.pkl
+__pycache__
+checkpoints
+result
+.venv
+.vscode
+.gitignore
+tools/__pycache__
+nn_model/__pycache__
