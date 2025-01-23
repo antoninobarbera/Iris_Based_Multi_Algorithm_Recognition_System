@@ -69,7 +69,6 @@ if  __name__ == '__main__':
          new_image = iris_obtained.get_keypoints_image()
          iris_obtained.set_iris_code()
          data_dict[i].append(iris_obtained)
-   print('fine') 
          
    id = id_class(config, data_dict)
    tp, fp, tn, fn, tot = 0, 0, 0, 0, 0
