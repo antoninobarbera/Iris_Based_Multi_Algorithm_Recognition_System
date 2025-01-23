@@ -2,6 +2,7 @@ import math
 import cv2 as cv
 import numpy as np
 
+
 def distance(point_1, point_2):
     x1, y1 = point_1
     x2, y2 = point_2

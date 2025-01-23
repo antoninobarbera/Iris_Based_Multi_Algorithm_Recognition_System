@@ -52,37 +52,36 @@ class id_class:
             flag = False
         return flag
         
-    
+        
     def identification(self, iris):
-       if not self.are_models_loaded:
-           print(' MODELS ARE NOT UPLOADED --- RUN models_generation.py')
-           sys.exit()
-       iris_code = [iris.get_iris_code()]
-       iris_code_scaled = self.scaler.transform(iris_code)
-       iris_code_red = self.feature_reduction.transform(iris_code_scaled)
-       
-       # CLASSIFIER 1 MATCHING
-       label_1 = self.classifier_1.predict(iris_code_red)       
-       # CLASSIFIER 2 MATCHING
-       label_2 = self.classifier_2.predict(iris_code_red)      
-       # CLASSIFIER 3 MATCHING
-       label_3 = self.classifier_3.predict(iris_code_red)
+        
+        if not self.are_models_loaded:
+            print(' MODELS ARE NOT UPLOADED --- RUN models_generation.py')
+            sys.exit()
+        iris_code = [iris.get_iris_code()]
+        iris_code_scaled = self.scaler.transform(iris_code)
+        iris_code_red = self.feature_reduction.transform(iris_code_scaled)
+        
+        # CLASSIFIER 1 MATCHING
+        label_1 = self.classifier_1.predict(iris_code_red)       
+        # CLASSIFIER 2 MATCHING
+        label_2 = self.classifier_2.predict(iris_code_red)      
+        # CLASSIFIER 3 MATCHING
+        label_3 = self.classifier_3.predict(iris_code_red)
 
-       possible = [label_1[0], label_2[0], label_3[0]]
-       possible = list(set(possible))
+        possible = [label_1[0], label_2[0], label_3[0]]
+        possible = list(set(possible))
 
-       result = []
-       for label in possible:
-           for possible_iris in self.data_dict[label]:
-              if self.sift_match(iris, possible_iris):
-                  result.append(label)
-                  break
-       result = list(set(result))
+        result = []
+        for label in possible:
+            for possible_iris in self.data_dict[label]:
+                if self.sift_match(iris, possible_iris):
+                    result.append(label)
+                    break
+        result = list(set(result))
 
-       if len(result) == 1:
-           return True, result[0]
-       else:
-           return False, None
-    
-
-    
+        if len(result) == 1:
+            return True, result[0]
+        else:
+            return False, None
+        

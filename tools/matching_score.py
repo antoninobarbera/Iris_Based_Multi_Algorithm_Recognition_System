@@ -32,8 +32,9 @@ class matching_score_class():
         median_r_diff = np.median(np.array(self.r_diff_list))
         median_theta_diff = np.median(np.array(self.theta_diff_list))
         for i in range (0, self.size):
-           r_diff_is_valid = is_within_one_std(self.r_diff_list[i], median_r_diff, self.config.stdev_r_diff)
-           theta_diff_is_valid = is_within_one_std(self.theta_diff_list[i], median_theta_diff, self.config.stdev_theta_diff)
-           if r_diff_is_valid and theta_diff_is_valid: 
-              points += 1
+            r_diff_is_valid = is_within_one_std(self.r_diff_list[i], median_r_diff, self.config.stdev_r_diff)
+            theta_diff_is_valid = is_within_one_std(self.theta_diff_list[i], median_theta_diff, self.config.stdev_theta_diff)
+            if r_diff_is_valid and theta_diff_is_valid: 
+                points += 1
         return points
+    

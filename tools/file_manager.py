@@ -1,10 +1,7 @@
-# Standard libraries
 import os
 import sys
 import shutil
 from pathlib import Path
-
-# Third-party libraries
 import yaml
 from addict import Dict
 from yaml_config_override import add_arguments

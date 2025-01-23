@@ -1,5 +1,4 @@
 import os
-import pickle
 import joblib
 import numpy as np
 from iris import iris_class
@@ -11,22 +10,21 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.manifold import LocallyLinearEmbedding
 from nn_model.nn_iris_model import nn_classifier_class
-
+from data_classes.manage_dataset import CASIA_dataset
 
 
 def train_test():
-   with open('CASIA.pkl', 'rb') as file:
-       casia = pickle.load(file)
+   """
+   Prepares training and testing datasets for model training and evaluation.
 
-   rec_1 = casia['rec_1']
-   rec_2 = casia['rec_2']
-   rec_3 = casia['rec_3']
-   rec_4 = casia['rec_4']
-   rec_5 = casia['rec_5']
-   rec_6 = casia['rec_6']
-   rec_7 = casia['rec_7']
-
-   train = [rec_1, rec_2 ,rec_5, rec_6]
+   :return: Scaled and formatted training and testing data with corresponding labels.
+   :rtype: tuple (numpy.ndarray, list, numpy.ndarray, list)
+   """
+   casia_dataset = CASIA_dataset(config)
+   casia_dataset.load_dataset()
+   train = casia_dataset.get_data_rec()
+   
+   # Prepare training data
    X_train_temp = []
    y_train = []
    for rec in train:
@@ -39,7 +37,8 @@ def train_test():
          X_train_temp.append(code)
          y_train.append(i)
 
-   test = [rec_3 , rec_4 ,rec_7]
+   # Prepare testing data
+   test = casia_dataset.get_rec_test()
    X_test_temp = []
    y_test = []
    for rec in test:
@@ -57,17 +56,21 @@ def train_test():
    return X_train, y_train, X_test, y_test
 
 
-if  __name__ == '__main__':       
+if  __name__ == '__main__':
+       
    config = configuration()
+   
+   print('\nTraining start')
+   print('\n    Creating train and test...')
    X_train, y_train, X_test, y_test = train_test()
    
-   # scaler
+   # Standardize the datasets
    scaler = StandardScaler()
    scaler.fit(X_train)
    X_train_scaled = scaler.transform(X_train)
    X_test_scaled = scaler.transform(X_test)
    
-   # feature reduction
+   # Apply feature reduction using Locally Linear Embedding (LLE)
    n_neighbors = config.feature_reduction_lle.n_neighbors
    n_components = config.feature_reduction_lle.n_components
    lle = LocallyLinearEmbedding(n_neighbors=n_neighbors, n_components=n_components)
@@ -76,16 +79,19 @@ if  __name__ == '__main__':
    X_test_red = lle.transform(X_test_scaled)
 
    # training knn
+   print('\n    Training KNN...')
    knn = KNeighborsClassifier(n_neighbors=1, metric='cosine')
    knn.fit(X_train_red, y_train)
    y_pred_knn = knn.predict(X_test_red)
 
    # training svm
+   print('\n    Training SVM...')
    svm = SVC(kernel='sigmoid')
    svm.fit(X_train_red, y_train)
    y_pred_svm = svm.predict(X_test_red)
 
    # training neural network
+   print('\n    Training Neural Network...')
    input_size = X_train_red.shape[1]
    num_classes = 100
    model = iris_network(input_size, num_classes)
@@ -93,11 +99,13 @@ if  __name__ == '__main__':
    nn.fit(X_train_red, y_train)
    y_pred_nn = nn.predict(X_test_red)
 
-   # test
+   # Calculate accuracy for each model
    accuracy_knn = accuracy_score(y_test, y_pred_knn)
    accuracy_svm = accuracy_score(y_test, y_pred_svm)
    accuracy_nn = accuracy_score(y_test, y_pred_nn)
    
+   # Calculate merged accuracy for ensemble-like evaluation
+   print('\nCalculating performance...')
    matched = 0
    for i in range(len(y_test)):
       if y_test[i] == y_pred_knn[i] or y_test[i] == y_pred_svm[i] or y_test[i] == y_pred_nn[i]:
@@ -105,14 +113,14 @@ if  __name__ == '__main__':
 
    merge_accuracy = matched / len(y_test)
    
-   print(" TEST")
-   print('Accuracy KNN : ' + str(round(accuracy_knn, 2)))
-   print('Accuracy SVM : ' + str(round(accuracy_svm, 2)))
-   print('Accuracy NN : ' + str(round(accuracy_nn, 2))) 
-   print('Merge Accuracy : ' + str(round(merge_accuracy, 2)))
-
-
-   # save models
+   print("\nTEST...")
+   print('    Accuracy KNN : ' + str(round(accuracy_knn, 2)))
+   print('    Accuracy SVM : ' + str(round(accuracy_svm, 2)))
+   print('    Accuracy NN : ' + str(round(accuracy_nn, 2))) 
+   print('    Merge Accuracy : ' + str(round(merge_accuracy, 2)))
+   print('\n')
+   
+   # Save the trained models and configurations
    if not directory_exists('checkpoints'):
       os.mkdir('checkpoints')
    
@@ -121,22 +129,3 @@ if  __name__ == '__main__':
    joblib.dump(knn, os.path.join('checkpoints', 'knn_model.pkl'))
    joblib.dump(svm, os.path.join('checkpoints', 'svm_model.pkl'))
    joblib.dump(nn, os.path.join('checkpoints', 'nn_model.pkl'))
-
-   
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

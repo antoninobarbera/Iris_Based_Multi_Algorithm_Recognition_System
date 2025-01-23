@@ -10,23 +10,23 @@ class nn_classifier_class():
     __slots__ = ['config', 'model', 'device', 'criterion', 'batch_size', 'optimizer', 'lower_is_better', 'best_metric']
 
     def __init__(self, model, config):
-       self.config = config.training.nn
+        self.config = config.training.nn
 
-       if self.config.want_to_use_cuda and torch.cuda.is_available():
-           self.device = torch.device('cuda')           
-       else:
-          self.device = torch.device('cpu')
+        if self.config.want_to_use_cuda and torch.cuda.is_available():
+            self.device = torch.device('cuda')           
+        else:
+            self.device = torch.device('cpu')
          
-       self.model = model    
-       self.model.to(self.device)
-       self.criterion = torch.nn.CrossEntropyLoss()
-       self.batch_size = self.config.batch_size
-       self.optimizer = torch.optim.Adamax(self.model.parameters(), lr=self.config.lr)
+        self.model = model    
+        self.model.to(self.device)
+        self.criterion = torch.nn.CrossEntropyLoss()
+        self.batch_size = self.config.batch_size
+        self.optimizer = torch.optim.Adamax(self.model.parameters(), lr=self.config.lr)
 
-       if self.config.lower_is_better:
-            self.best_metric = float('inf')
-       else:
-           self.best_metric = float('-inf')
+        if self.config.lower_is_better:
+                self.best_metric = float('inf')
+        else:
+            self.best_metric = float('-inf')
 
     def fit(self, X, y):
         X_ten = torch.tensor(X, dtype=torch.float32) 
@@ -85,28 +85,29 @@ class nn_classifier_class():
 
 
     def predict(self, X): 
-       X_ten = torch.tensor(X, dtype=torch.float32)  
-       if X.shape[0] == 1:
-           batch_size = 1
-       else:
-           batch_size = self.batch_size
-       dataset = torch.utils.data.TensorDataset(X_ten)
-       dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
-       self.model.eval()
-       predictions = []
-       with torch.no_grad():
-          
-          for batch in dataloader:
-              inputs = batch[0]
-              inputs = inputs.to(self.device)
-              outputs = self.model(inputs)
-              pred = torch.argmax(outputs, dim=1)
-              predictions.extend(pred.cpu().numpy())
-       predictions_np_array = np.array(predictions)
-       return predictions_np_array
+        X_ten = torch.tensor(X, dtype=torch.float32)  
+        if X.shape[0] == 1:
+            batch_size = 1
+        else:
+            batch_size = self.batch_size
+        dataset = torch.utils.data.TensorDataset(X_ten)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        self.model.eval()
+        predictions = []
+        with torch.no_grad():
+            
+            for batch in dataloader:
+                inputs = batch[0]
+                inputs = inputs.to(self.device)
+                outputs = self.model(inputs)
+                pred = torch.argmax(outputs, dim=1)
+                predictions.extend(pred.cpu().numpy())
+        predictions_np_array = np.array(predictions)
+        return predictions_np_array
     
     def load_weights(self, weights_path):
         if self.config.want_to_use_cuda and torch.cuda.is_available():
            self.model.load_state_dict(torch.load(weights_path, weights_only=True))
         else:
            self.model.load_state_dict(torch.load(weights_path, map_location=torch.device('cpu'), weights_only=True))
+           

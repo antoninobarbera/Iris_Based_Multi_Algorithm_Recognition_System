@@ -1,6 +1,7 @@
 import cv2 as cv
 import numpy as np
 
+
 def detect_pupil(image, config):
     config = config.segmentation.pupil
     blurred_gray = cv.medianBlur(image, 5)
@@ -24,26 +25,26 @@ def detect_pupil(image, config):
        return image, None
     
 def detect_iris(image, config):
-   config = config.segmentation.iris
-   equalized = cv.equalizeHist(image)
-   blurred_equalize = cv.medianBlur(equalized, 5)
-   _, thresh = cv.threshold(blurred_equalize, 127, 255, cv.THRESH_BINARY)
-   img_canny = cv.Canny(thresh, threshold1=config.canny_threshold_1, threshold2=config.canny_threshold_2)
-   circles = cv.HoughCircles(img_canny,
-                        cv.HOUGH_GRADIENT, 
-                        dp=config.dp, 
-                        minDist=config.minDist, 
-                        param1=config.param1,
-                        param2=config.param2, 
-                        minRadius=config.minRadius,
-                        maxRadius=config.maxRadius)
-   if circles is not None:
-       circles = np.round(circles[0, :]).astype("int")
-       x, y, r = circles[0]
-       return (x, y), r
-   else:
-       print(' No Iris Detected')
-       return image, None
+    config = config.segmentation.iris
+    equalized = cv.equalizeHist(image)
+    blurred_equalize = cv.medianBlur(equalized, 5)
+    _, thresh = cv.threshold(blurred_equalize, 127, 255, cv.THRESH_BINARY)
+    img_canny = cv.Canny(thresh, threshold1=config.canny_threshold_1, threshold2=config.canny_threshold_2)
+    circles = cv.HoughCircles(img_canny,
+                            cv.HOUGH_GRADIENT, 
+                            dp=config.dp, 
+                            minDist=config.minDist, 
+                            param1=config.param1,
+                            param2=config.param2, 
+                            minRadius=config.minRadius,
+                            maxRadius=config.maxRadius)
+    if circles is not None:
+        circles = np.round(circles[0, :]).astype("int")
+        x, y, r = circles[0]
+        return (x, y), r
+    else:
+        print(' No Iris Detected')
+        return image, None
 
 def remove_pupil(image, pupil_centre, pupil_radius):
     mask = 255 - (np.zeros_like(image))
@@ -97,4 +98,4 @@ def crop_padding(image, radius, config):
     image = image[y: y + (2 * radius), x: x + (2 * radius)]
     centre = (x_size - x, y_size - y)
     resized_image, new_centre = padding(image, centre, config.segmentation.final_x_size, config.segmentation.final_y_size) 
-    return resized_image, new_centre   
+    return resized_image, new_centre
