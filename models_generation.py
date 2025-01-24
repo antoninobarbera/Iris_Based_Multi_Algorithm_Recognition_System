@@ -5,12 +5,12 @@ from iris import iris_class
 from sklearn.svm import SVC
 from nn_model.nn_iris import iris_network
 from sklearn.metrics import accuracy_score
-from tools.file_manager import configuration, directory_exists
+from tools.file_manager import configuration, directory_exists, load_dataset
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.manifold import LocallyLinearEmbedding
 from nn_model.nn_iris_model import nn_classifier_class
-from data_classes.manage_dataset import CASIA_dataset
+
 from tools import utils
 
 
@@ -21,10 +21,9 @@ def train_test():
    :return: Scaled and formatted training and testing data with corresponding labels.
    :rtype: tuple (numpy.ndarray, list, numpy.ndarray, list)
    """
-   casia_dataset = CASIA_dataset(config)
-   casia_dataset.load_dataset()
-   train = casia_dataset.get_data_rec()
-   
+   casia_dataset = load_dataset(config)
+
+   train = [casia_dataset[0], casia_dataset[1] , casia_dataset[4], casia_dataset[5]]
    # Prepare training data
    X_train_temp = []
    y_train = []
@@ -39,7 +38,7 @@ def train_test():
          y_train.append(i)
 
    # Prepare testing data
-   test = casia_dataset.get_rec_test()
+   test = [casia_dataset[2], casia_dataset[3] , casia_dataset[6]]
    X_test_temp = []
    y_test = []
    for rec in test:

@@ -27,7 +27,7 @@ class id_class:
             self.are_models_loaded = False
 
     
-    def sift_match(self, iris_1, iris_2):
+    def sift_match(self, iris_1, iris_2, threshold=None):
         bf = cv.BFMatcher()
         kp_1 = iris_1.get_keypoints()
         des_1 = iris_1.get_descriptors()
@@ -46,38 +46,15 @@ class id_class:
             p_2 = (x_2, y_2) 
             matching_score.__add__(p_1, p_2)
         score = matching_score()
-        if score > self.config.matching.threshold:
+        if threshold is None:
+            threshold = self.config.matching.threshold
+        if score > threshold:
             flag = True
         else:
             flag = False
         return flag
     
-    def sift_match2(self, iris_1, iris_2, soglia):
-        bf = cv.BFMatcher()
-        kp_1 = iris_1.get_keypoints()
-        des_1 = iris_1.get_descriptors()
-        kp_2 = iris_2.get_keypoints()
-        des_2 = iris_2.get_descriptors()
-        if not kp_1 or not kp_2: 
-            return False
-        matches = bf.knnMatch(des_1, des_2, k=2)
-        matching_score = matching_score_class(iris_1, iris_2, self.config)
-        for m, n in matches:
-            if (m.distance / n.distance) > self.config.matching.lowe_filter:
-                continue
-            x_1, y_1 = kp_1[m.queryIdx].pt
-            x_2, y_2 = kp_2[m.trainIdx].pt
-            p_1 = (x_1, y_1)
-            p_2 = (x_2, y_2) 
-            matching_score.__add__(p_1, p_2)
-        score = matching_score()
-        if score > soglia:
-            flag = True
-        else:
-            flag = False
-        return flag
-        
-    def identification(self, iris):
+    def identification(self, iris, threshold):
         
         if not self.are_models_loaded:
             print(' MODELS ARE NOT UPLOADED --- RUN models_generation.py')
@@ -99,7 +76,7 @@ class id_class:
         result = []
         for label in possible:
             for possible_iris in self.data_dict[label]:
-                if self.sift_match(iris, possible_iris):
+                if self.sift_match(iris, possible_iris, threshold):
                     result.append(label)
                     break
         result = list(set(result))

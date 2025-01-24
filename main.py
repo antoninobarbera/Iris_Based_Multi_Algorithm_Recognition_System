@@ -1,104 +1,91 @@
 import os
+import shutil
 from iris import iris_class
-from tools.file_manager import configuration
-from data_classes.manage_dataset import CASIA_dataset
-from data_classes.manage_dataset import Manage_file
+from tools.file_manager import configuration, load_dataset, directory_exists, move_directory
 from identification import id_class
 import warnings
-from tools import utils
+import cv2 as cv
+from tools.utils import iris_code_plot, ROC_curve
+import matplotlib.pyplot as plt
 
 warnings.filterwarnings("ignore")
 
-if  __name__ == '__main__':
-   
-   # Load the configuration file
-   config = configuration()
-   
-   # Initialize the CASIA dataset handler
-   casia_dataset = CASIA_dataset(config)
-   
-   # Load the dataset into test, total, and data record splits
-   rec_test, rec_tot, data_rec = casia_dataset.load_dataset()
-   
-   # Initialize the file manager for creating folders
-   manage_file = Manage_file()
-   segmented_path, keypoints_path, normalized_path = manage_file.create_folder_image()
-   
-   print('\nLoading images...')
-   print('\nSegmentation - Normalization - Feature extraction in progress...\n')
+def generate_folder():
+   if directory_exists('images'):
+      shutil.rmtree('images')
 
-   segmented_images = []
-   keypoints_images = []
-   normalized_images = []
+   os.mkdir('images')      
+
+   if not directory_exists('original'):
+      os.mkdir('original')
+   if not directory_exists('segmented'):
+      os.mkdir('segmented')
+   if not directory_exists('normalized'):
+      os.mkdir('normalized')
+   if not directory_exists('iris code'):
+      os.mkdir('iris code')
+   if not directory_exists('keypoint'):
+      os.mkdir('keypoint')
+
+def load_folder():
+   move_directory('original', 'images')
+   move_directory('segmented', 'images')
+   move_directory('normalized', 'images')
+   move_directory('iris code', 'images')
+   move_directory('keypoint', 'images')
+
+def load_iris(eye, sub_index, image_index):
+   iris_obtained = iris_class(eye, sub_index, config)
+   iris_obtained.segmentation()
+   iris_obtained.feature_extraction()
+   iris_obtained.set_iris_code()   
+   iris_code = iris_obtained.get_iris_code()      
+         
+   path = os.path.join('original', str(image_index)+'.jpeg')
+   cv.imwrite(path, iris_obtained.get_image())
+   path = os.path.join('segmented', str(image_index)+'.jpeg')
+   cv.imwrite(path, iris_obtained.get_segmented_image())
+   path = os.path.join('normalized', str(image_index)+'.jpeg')
+   cv.imwrite(path, iris_obtained.get_normalized_image())
+   path = os.path.join('iris code', str(image_index)+'.jpeg')
+   iris_code_plot(iris_code, path)
+   path = os.path.join('keypoint', str(image_index)+'.jpeg')
+   cv.imwrite(path, iris_obtained.get_keypoints_image())
+   return iris_obtained
+
+
+def load_irises(dataset):
    irises = []
-   
-   print('Operation in test image...')
-   for rec in rec_test:
-      for i in range (0, 100):
-         # Retrieve the eye image and process it using the iris class
-         eye = rec[i]
-         iris_obtained = iris_class(eye, i, config)
-         
-         # Perform segmentation on the eye image
-         iris_obtained.segmentation()
-         segmented_image = iris_obtained.get_segmented_image()
-         segmented_images.append((segmented_image, os.path.join(segmented_path, f'{i}.jpeg')))
-         
-         # Perform feature extraction and retrieve the keypoints image
-         iris_obtained.feature_extraction()
-         keypoints_image = iris_obtained.get_keypoints_image()
-         
-         # Generate the iris code and store normalized images
-         iris_obtained.set_iris_code()
-         normalized_image = iris_obtained.get_normalized_image()
-         
-         irises.append(iris_obtained)
-         keypoints_images.append((keypoints_image, os.path.join(keypoints_path, f'{i}.jpeg')))
-         normalized_images.append((normalized_image, os.path.join(normalized_path, f'{i}.jpeg')))
-   
-   # Save processed images to the appropriate directories
-   manage_file.save_image(segmented_images, keypoints_images, normalized_images)
-   
-   print('Operation in total image...')
-   for rec in rec_tot:
-      for i in range (100, 108):
-         
-         # Retrieve the eye image and process it using the iris class
-         eye = rec[i]
-         iris_obtained = iris_class(eye, i, config)
-         
-         # Perform segmentation and feature extraction
-         iris_obtained.segmentation()
-         iris_obtained.feature_extraction()
-         
-         # Retrieve the keypoints image and set the iris code
-         iris_obtained.set_iris_code()
-         irises.append(iris_obtained)
+   irises_stored = {i: [] for i in range (0, 100)}
+   index = 0
 
-   print('Operation in train_image...')
-   data_dict = {i : [] for i in range(0, 108)}
-   for rec in data_rec:
-      for i in range (0, 100):
-         # Retrieve the eye image and process it using the iris class
-         eye = rec[i]
-         iris_obtained = iris_class(eye, i, config)
-         
-         # Perform segmentation and feature extraction
-         iris_obtained.segmentation()
-         iris_obtained.feature_extraction()
-         
-         # Retrieve the keypoints image and set the iris code
-         iris_obtained.set_iris_code()
-         data_dict[i].append(iris_obtained)
-               
-   # Initialize the identification class with the processed data
-   id = id_class(config, data_dict)
+   for rec_index, rec in enumerate(dataset):
+      for subject in range(0, 108):
+         eye = rec[subject]
+         if subject >= 100: # Unauthorized subject
+            iris_obtained = load_iris(eye, subject, index)
+            irises.append(iris_obtained)
+         elif rec_index in [0, 1, 4, 5]: # Rilevazione usata per il train
+            iris_obtained = load_iris(eye, subject, index)
+            irises_stored[subject].append(iris_obtained)
+         else: # Rilevazione usata per il test
+            iris_obtained = load_iris(eye, subject, index)
+            irises.append(iris_obtained)
+         index += 1
+
+   return irises, irises_stored
+
+
+def test(irises, irises_stored, threshold=None):
+   print('\n')
+   if threshold is not None:
+      print(" Threshold : " + str(threshold))
+   id = id_class(config, irises_stored)
    tp, fp, tn, fn, tot = 0, 0, 0, 0, 0
-   
-   print('\nIdentification:')
+
    for iris in irises:
       tot += 1
-      flag, label = id.identification(iris)
+      flag, label = id.identification(iris, threshold)
       
       # Evaluate identification results
       if flag:
@@ -111,13 +98,13 @@ if  __name__ == '__main__':
                fn += 1
             else:
                tn += 1
-
+   '''
    print('\tTrue Positive ' + str(tp))
    print('\tFalse Positive ' + str(fp))
    print('\tTrue Negative ' + str(tn))
    print('\tFalse Negative ' + str(fn))
-
-   print('\nPerformance achieved (' + str(tot) + ')')
+   '''
+   #print('\nPerformance achieved (' + str(tot) + ')')
    accuracy = (tp + tn) / tot * 100
    far = fp / (fp + tn) * 100
    frr = fn / (fn + tp) * 100
@@ -125,67 +112,52 @@ if  __name__ == '__main__':
    print('\taccuracy ' + str(round(accuracy, 2)) + " %")
    print('\tFAR ' + str(round(far, 2)) + " %")
    print('\tFRR ' + str(round(frr, 2)) + " %")
-   
-   utils.identification_performance(tp, fp, tn, fn)
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   '''import numpy as np
-   import matplotlib.pyplot as plt
-   
-   thresholds = np.arange(12, 32, 2)
-   frr_values = []
-   far_values = []
 
-   print('\nCalculating FRR and FAR for different thresholds...')
+
+   return far, frr
+
+
+def ROC_Curve(far, frr):
+   tpr = [100 - value for value in frr]
+   plt.figure()
+   plt.plot(far, tpr, marker="o", label="ROC Curve")
+   plt.plot([0, 1], [0, 1], color="gray", linestyle="--", label="Riferimento (casuale)")
+   plt.xlabel("False Positive Rate (FAR)")
+   plt.ylabel("True Positive Rate (1 - FRR)")
+   plt.title("Curva ROC da FAR e FRR")
+   plt.legend(loc="lower right")
+   plt.grid()
+   plt.show()
+
+
+
+if  __name__ == '__main__':
+   
+   # Load the configuration file
+   config = configuration()
+   
+   # Load CASIA-v1 dataset
+   casia_dataset = load_dataset(config)
+   
+   #Loading irises
+   print('\nLoading images...')
+   print('\n Original -Segmentation - Normalization - Iris Code - Keypoints - Images Generation in progress...\n')
+   generate_folder()
+   irises, irises_stored = load_irises(casia_dataset)
+   load_folder()
+
+   # Test system
+   thresholds = [6, 14, 22, 30, 38]
+   far = []
+   frr = []
+
    for threshold in thresholds:
-      tp, fp, tn, fn = 0, 0, 0, 0
+         far_x, frr_x = test(irises, irises_stored, threshold)
+         far.append(far_x)
+         frr.append(frr_x)
 
-      # Set threshold in the identification class (implement this in id_class)
-      id.set_threshold(threshold)
+   if not directory_exists('graph'):
+      os.mkdir('graph')
 
-      for iris in irises:
-         flag, label = id.identification(iris)
-         
-         if flag:
-               if iris.get_idx() == label:
-                  tp += 1
-               else:
-                  fp += 1
-         else:
-               if iris.get_idx() < 100:
-                  fn += 1
-               else:
-                  tn += 1
-
-      # Calculate FRR and FAR
-      frr = fn / (fn + tp) if (fn + tp) > 0 else 0
-      far = fp / (fp + tn) if (fp + tn) > 0 else 0
-
-      frr_values.append(frr)
-      far_values.append(far)
-
-   # Plot the FRR and FAR curves
-   plt.figure(figsize=(10, 6))
-   plt.plot(thresholds, frr_values, label="FRR (False Rejection Rate)", color="red")
-   plt.plot(thresholds, far_values, label="FAR (False Acceptance Rate)", color="blue")
-   plt.xlabel("Threshold", fontsize=14)
-   plt.ylabel("Rate", fontsize=14)
-   plt.title("FRR / FAR Threshold", fontsize=16)
-   plt.legend(fontsize=12)
-   plt.grid(alpha=0.7)
-   plt.tight_layout()
-   plt.show()'''
-   
+   path = os.path.join('graph', 'ROC_curve.jpeg')
+   ROC_curve(far, frr, thresholds, path)

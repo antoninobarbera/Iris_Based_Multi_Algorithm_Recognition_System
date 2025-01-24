@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
+
 def distance(point_1, point_2):
     x1, y1 = point_1
     x2, y2 = point_2
@@ -295,24 +296,27 @@ def frr_far_threshold(id_class_instance, irises, thresholds):
     plt.grid(alpha=0.7)
     plt.tight_layout()
     plt.show()
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
- 
-    
-    
-    
+
+def iris_code_plot(iris_code, path):
+    plt.plot(iris_code)
+    plt.title(" IRIS CODE PLOT ")
+    plt.xlabel("Index")
+    plt.ylabel("Value")    
+    plt.savefig(path, format="jpeg", dpi=300)
+    plt.close()
+
+def ROC_curve(far, frr, thresholds, path):
+    plt.figure()
+    plt.plot(far, frr, marker='o', label="ROC Curve")
+    for i, threshold in enumerate(thresholds):
+       plt.text(far[i], frr[i], f"Threshold:{int(threshold)}", fontsize=9)
+    plt.xlabel("FAR %")
+    plt.ylabel("FRR %")
+    plt.title("ROC CURVE")
+    plt.grid()
+    plt.legend()
+    plt.savefig(path, format="jpeg", dpi=300)
+    plt.close()
     
 def frr_far_sift_graph(frr_values, far_values, thresholds, save_path='graph/'):
     """
@@ -344,4 +348,3 @@ def frr_far_sift_graph(frr_values, far_values, thresholds, save_path='graph/'):
     plot_filename = os.path.join(save_path, 'frr_far_vs_threshold.png')
     plt.savefig(plot_filename)
     plt.close()  # Close the plot
-        
