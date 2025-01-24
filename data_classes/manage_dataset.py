@@ -82,7 +82,7 @@ class Manage_file():
         os.makedirs(keypoints_path, exist_ok=True)
         os.makedirs(normalized_path, exist_ok=True)
         
-        return segmented_path, keypoints_path
+        return segmented_path, keypoints_path, normalized_path
 
     def save_image(self, segmented_images, keypoints_images, normalized_images):
 

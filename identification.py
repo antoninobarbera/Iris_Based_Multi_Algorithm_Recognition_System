@@ -51,7 +51,31 @@ class id_class:
         else:
             flag = False
         return flag
-        
+    
+    def sift_match2(self, iris_1, iris_2, soglia):
+        bf = cv.BFMatcher()
+        kp_1 = iris_1.get_keypoints()
+        des_1 = iris_1.get_descriptors()
+        kp_2 = iris_2.get_keypoints()
+        des_2 = iris_2.get_descriptors()
+        if not kp_1 or not kp_2: 
+            return False
+        matches = bf.knnMatch(des_1, des_2, k=2)
+        matching_score = matching_score_class(iris_1, iris_2, self.config)
+        for m, n in matches:
+            if (m.distance / n.distance) > self.config.matching.lowe_filter:
+                continue
+            x_1, y_1 = kp_1[m.queryIdx].pt
+            x_2, y_2 = kp_2[m.trainIdx].pt
+            p_1 = (x_1, y_1)
+            p_2 = (x_2, y_2) 
+            matching_score.__add__(p_1, p_2)
+        score = matching_score()
+        if score > soglia:
+            flag = True
+        else:
+            flag = False
+        return flag
         
     def identification(self, iris):
         

@@ -11,6 +11,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.manifold import LocallyLinearEmbedding
 from nn_model.nn_iris_model import nn_classifier_class
 from data_classes.manage_dataset import CASIA_dataset
+from tools import utils
 
 
 def train_test():
@@ -61,7 +62,7 @@ if  __name__ == '__main__':
    config = configuration()
    
    print('\nTraining start')
-   print('\n    Creating train and test...')
+   print('\n    Creating train set and test set...')
    X_train, y_train, X_test, y_test = train_test()
    
    # Standardize the datasets
@@ -77,6 +78,7 @@ if  __name__ == '__main__':
    lle.fit(X_train_scaled)
    X_train_red = lle.transform(X_train_scaled)
    X_test_red = lle.transform(X_test_scaled)
+   utils.LLE_graph(X_train_red, y_train)
 
    # training knn
    print('\n    Training KNN...')
@@ -113,7 +115,9 @@ if  __name__ == '__main__':
 
    merge_accuracy = matched / len(y_test)
    
-   print("\nTEST...")
+   utils.accuracy_comparison(accuracy_knn, accuracy_svm, accuracy_nn, merge_accuracy)
+   
+   print("\nTEST performance...")
    print('    Accuracy KNN : ' + str(round(accuracy_knn, 2)))
    print('    Accuracy SVM : ' + str(round(accuracy_svm, 2)))
    print('    Accuracy NN : ' + str(round(accuracy_nn, 2))) 

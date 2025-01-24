@@ -1,7 +1,8 @@
 import math
 import cv2 as cv
 import numpy as np
-
+import matplotlib.pyplot as plt
+import os
 
 def distance(point_1, point_2):
     x1, y1 = point_1
@@ -104,4 +105,243 @@ def manage_best_model_and_metrics(model, evaluation_metric, metrics, best_metric
         best_model = model
 
     return best_model, best_metric
+
+def accuracy_comparison(accuracy_knn, accuracy_svm, accuracy_nn, merge_accuracy):
+    """
+    Plots a bar chart comparing the accuracy of KNN, SVM, Neural Network models, and Merge Accuracy, and saves it to the 'graph' folder.
+
+    :param accuracy_knn: Accuracy of the KNN model.
+    :type accuracy_knn: float
+    :param accuracy_svm: Accuracy of the SVM model.
+    :type accuracy_svm: float
+    :param accuracy_nn: Accuracy of the Neural Network model.
+    :type accuracy_nn: float
+    :param merge_accuracy: Combined accuracy of the models.
+    :type merge_accuracy: float
+    """
+    models = ['KNN', 'SVM', 'Neural Network', 'Merge Accuracy']
+    accuracies = [accuracy_knn, accuracy_svm, accuracy_nn, merge_accuracy]
+    os.makedirs('graph', exist_ok=True)
+
+    plt.figure(figsize=(9, 6))
+    bars = plt.bar(models, accuracies, color=['blue', 'green', 'orange', 'purple'], alpha=0.8, width=0.6)
+
+    for bar in bars:
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width() / 2.0, height,
+                f'{height:.2%}', ha='center', va='bottom', fontsize=12)
+
+    plt.xlabel('Models', fontsize=14)
+    plt.ylabel('Accuracy', fontsize=14)
+    plt.title('Comparison of Model Accuracies', fontsize=16)
+
+    plt.ylim(0, 1.05)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+
+    plot_path = os.path.join('graph', 'model_accuracy_comparison.png')
+    plt.savefig(plot_path)
+    plt.close()
+    
+def LLE_graph(X_train_red, y_train, save_path='graph/'):
+    """
+    Visualizes and saves the reduced features using LLE (Locally Linear Embedding).
+
+    :param X_train_red: Reduced feature data.
+    :param y_train: Labels associated with the data points.
+    :param save_path: Directory path to save the plot (default is 'graph/').
+    """
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+    
+    plt.figure(figsize=(8, 6))
+    scatter = plt.scatter(X_train_red[:, 0], X_train_red[:, 1], c=y_train, cmap='viridis', edgecolor='k', s=50)
+    
+    plt.colorbar(scatter, label='Label')
+    
+    plt.title('Reduced Features Using LLE')
+    plt.xlabel('First Component')
+    plt.ylabel('Second Component')
+    
+    plot_filename = os.path.join(save_path, 'reduced_features_lle.png')
+    plt.savefig(plot_filename)
+    plt.close() 
+    
+def identification_performance(tp, fp, tn, fn, save_path='graph/'):
+    """
+    Visualizes the performance of the identification system using a bar chart.
+
+    :param tp: True Positives count.
+    :param fp: False Positives count.
+    :param tn: True Negatives count.
+    :param fn: False Negatives count.
+    :param save_path: Directory path to save the plot (default is 'graph/').
+    """
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+        
+    categories = ['True Positive', 'False Positive', 'True Negative', 'False Negative']
+    values = [tp, fp, tn, fn]
+    
+    plt.figure(figsize=(9, 6))
+    plt.bar(categories, values, color=['green', 'red', 'blue', 'orange'])
+
+    plt.title('Identification System Performance')
+    plt.xlabel('Categories')
+    plt.ylabel('Count')
+
+    plot_filename = os.path.join(save_path, 'identification_performance.png')
+    plt.savefig(plot_filename)
+    plt.close()
+
+def frr_far_sift(frr, far, save_path='graph/'):
+    """
+    Visualizes the FRR and FAR metrics using bar charts.
+
+    :param frr: False Rejection Rate.
+    :param far: False Acceptance Rate.
+    :param save_path: Directory path to save the plots (default is 'graph/').
+    """
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+
+    metrics = ['FRR', 'FAR']
+    values = [frr, far]
+    
+    plt.figure(figsize=(8, 6))
+    plt.bar(metrics, values, color=['red', 'blue'])
+
+    plt.title('FRR and FAR of SIFT algorithm')
+    plt.xlabel('Metrics')
+    plt.ylabel('Percentage (%)')
+
+    plot_filename = os.path.join(save_path, 'frr_far_calculation.png')
+    plt.savefig(plot_filename)
+    plt.close()
+
+def error_distribution_graph(frr, far, save_path='graph/'):
+    """
+    Visualizes the distribution of FRR and FAR using a pie chart.
+
+    :param frr: False Rejection Rate.
+    :param far: False Acceptance Rate.
+    :param save_path: Directory path to save the plot (default is 'graph/').
+    """
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+
+    labels = ['FRR', 'FAR']
+    sizes = [frr, far]
+    colors = ['red', 'blue']
+
+    plt.figure(figsize=(8, 6))
+    plt.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140)
+    plt.title('Error Distribution (FRR vs FAR)')
+
+    plot_filename = os.path.join(save_path, 'error_distribution.png')
+    plt.savefig(plot_filename)
+    plt.close()
+    
+def frr_far_threshold(id_class_instance, irises, thresholds):
+    """
+    Plots FRR and FAR curves as a function of thresholds.
+
+    :param id_class_instance: Instance of the identification class.
+    :type id_class_instance: id_class
+    :param irises: List of processed iris objects to evaluate.
+    :type irises: list
+    :param thresholds: List of thresholds to evaluate.
+    :type thresholds: list or numpy.ndarray
+    """
+    frr_values = []
+    far_values = []
+
+    for threshold in thresholds:
+        tp, fp, tn, fn = 0, 0, 0, 0
+
+        # Set the threshold in the identification class
+        id_class_instance.set_threshold(threshold)
+
+        # Evaluate the performance for the current threshold
+        for iris in irises:
+            flag, label = id_class_instance.identification(iris)
+            
+            if flag:
+                if iris.get_idx() == label:
+                    tp += 1
+                else:
+                    fp += 1
+            else:
+                if iris.get_idx() < 100:
+                    fn += 1
+                else:
+                    tn += 1
+
+        # Calculate FRR and FAR
+        frr = fn / (fn + tp) if (fn + tp) > 0 else 0
+        far = fp / (fp + tn) if (fp + tn) > 0 else 0
+
+        frr_values.append(frr)
+        far_values.append(far)
+
+    # Plot the FRR and FAR curves
+    plt.figure(figsize=(10, 6))
+    plt.plot(thresholds, frr_values, label="FRR (False Rejection Rate)", color="red")
+    plt.plot(thresholds, far_values, label="FAR (False Acceptance Rate)", color="blue")
+    plt.xlabel("Threshold", fontsize=14)
+    plt.ylabel("Rate", fontsize=14)
+    plt.title("FRR and FAR vs Threshold", fontsize=16)
+    plt.legend(fontsize=12)
+    plt.grid(alpha=0.7)
+    plt.tight_layout()
+    plt.show()
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+ 
+    
+    
+    
+    
+def frr_far_sift_graph(frr_values, far_values, thresholds, save_path='graph/'):
+    """
+    Plots and saves the FRR and FAR against the threshold.
+
+    :param frr_values: List of FRR values.
+    :param far_values: List of FAR values.
+    :param thresholds: List of threshold values.
+    :param save_path: Directory path to save the plot (default is 'graph/').
+    """
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+
+    plt.figure(figsize=(10, 6))
+
+    # Plot FRR and FAR against threshold
+    plt.plot(thresholds, frr_values, label='FRR', color='red', marker='o')
+    plt.plot(thresholds, far_values, label='FAR', color='blue', marker='o')
+
+    # Add labels and title
+    plt.title('FRR and FAR vs Threshold')
+    plt.xlabel('Threshold')
+    plt.ylabel('Percentage (%)')
+
+    # Show legend
+    plt.legend()
+
+    # Save the plot
+    plot_filename = os.path.join(save_path, 'frr_far_vs_threshold.png')
+    plt.savefig(plot_filename)
+    plt.close()  # Close the plot
         

@@ -57,4 +57,4 @@ training:
     evaluation_metric: 'accuracy'
     batch_size: 32
     lr: 0.01
-    num_epochs: 5000
+    num_epochs: 500
