@@ -5,29 +5,12 @@ from tools.file_manager import configuration, load_dataset, directory_exists, mo
 from identification import id_class
 import warnings
 import cv2 as cv
-from tools.utils import iris_code_plot, ROC_curve
+from tools.utils import iris_code_plot, plot_far_frr_vs_threshold
 import matplotlib.pyplot as plt
 
 
 warnings.filterwarnings("ignore")
 
-
-def generate_folder1():
-   if directory_exists('iris_images'):
-      shutil.rmtree('iris_images')
-
-   os.mkdir('iris_images')      
-
-   if not directory_exists('original_iris'):
-      os.mkdir('original_iris')
-   if not directory_exists('segmented_iris'):
-      os.mkdir('segmented_iris')
-   if not directory_exists('normalized_iris'):
-      os.mkdir('normalized_iris')
-   if not directory_exists('iris_code'):
-      os.mkdir('iris_code')
-   if not directory_exists('keypoints_iris'):
-      os.mkdir('keypoints_iris')
 
 def generate_folder():
     if os.path.exists('iris_images'):
@@ -125,41 +108,6 @@ def test(irises, irises_stored, threshold=None):
    return far, frr
 
 
-def ROC_Curve(far, frr):
-   tpr = [100 - value for value in frr]
-   plt.figure()
-   plt.plot(far, tpr, marker="o", label="ROC Curve")
-   plt.plot([0, 1], [0, 1], color="gray", linestyle="--", label="Riferimento (casuale)")
-   plt.xlabel("False Positive Rate (FAR)")
-   plt.ylabel("True Positive Rate (1 - FRR)")
-   plt.title("Curva ROC da FAR e FRR")
-   plt.legend(loc="lower right")
-   plt.grid()
-   plt.show()
-   
-   
-def plot_far_frr_vs_threshold(far, frr, thresholds):
-   plt.figure(figsize=(10, 5))
-
-   plt.subplot(1, 2, 1)
-   plt.plot(thresholds, far, marker='o', color='r', label="FAR")
-   plt.xlabel('Soglia')
-   plt.ylabel('FAR (%)')
-   plt.title('FAR vs Soglia')
-   plt.grid(True)
-   plt.legend()
-   
-   plt.subplot(1, 2, 2)
-   plt.plot(thresholds, frr, marker='o', color='b', label="FRR")
-   plt.xlabel('Soglia')
-   plt.ylabel('FRR (%)')
-   plt.title('FRR vs Soglia')
-   plt.grid(True)
-   plt.legend()
-   plt.tight_layout()
-   plt.show()
-
-
 if  __name__ == '__main__':
    
    # Load the configuration file
@@ -171,7 +119,6 @@ if  __name__ == '__main__':
    #Loading irises
    print('\nLoading images...')
    print('\n Original - Segmentation - Normalization - Iris Code - Keypoints - Images Generation in progress...')
-   print('\n Segmentation - Normalization - Feature Extraction in progress...\n')
    generate_folder()
    irises, irises_stored = load_irises(casia_dataset)
 
@@ -192,8 +139,6 @@ if  __name__ == '__main__':
    if not directory_exists('graph'):
       os.mkdir('graph')
 
-   path = os.path.join('graph', 'ROC_curve.jpeg')
-   ROC_curve(far, frr, thresholds, path)
-   
-   plot_far_frr_vs_threshold(far, frr, thresholds)
+   path = os.path.join('graph', 'FAR_FRR_PLOT.jpeg')   
+   plot_far_frr_vs_threshold(far, frr, thresholds, path)
    

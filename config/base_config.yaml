@@ -48,7 +48,7 @@ matching:
   lowe_filter: 0.88
   stdev_r_diff: 0.15
   stdev_theta_diff: 10
-  threshold: 14
+  threshold: 22
   #thresholds: [6, 12, 16 ,22, 26, 30, 38]
   thresholds: [6, 16 , 22, 30, 38]
 

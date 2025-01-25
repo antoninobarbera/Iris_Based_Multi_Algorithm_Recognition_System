@@ -319,31 +319,6 @@ def identification_performance(tp, fp, tn, fn, save_path='graph/'):
     plt.savefig(plot_filename)
     plt.close()
 
-def frr_far_sift(frr, far, save_path='graph/'):
-    """
-    Visualizes the FRR and FAR metrics using bar charts.
-
-    :param frr: False Rejection Rate.
-    :param far: False Acceptance Rate.
-    :param save_path: Directory path to save the plots (default is 'graph/').
-    """
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
-
-    metrics = ['FRR', 'FAR']
-    values = [frr, far]
-    
-    plt.figure(figsize=(8, 6))
-    plt.bar(metrics, values, color=['red', 'blue'])
-
-    plt.title('FRR and FAR of SIFT algorithm')
-    plt.xlabel('Metrics')
-    plt.ylabel('Percentage (%)')
-
-    plot_filename = os.path.join(save_path, 'frr_far_calculation.png')
-    plt.savefig(plot_filename)
-    plt.close()
-
 def error_distribution_graph(frr, far, save_path='graph/'):
     """
     Visualizes the distribution of FRR and FAR using a pie chart.
@@ -366,55 +341,7 @@ def error_distribution_graph(frr, far, save_path='graph/'):
     plot_filename = os.path.join(save_path, 'error_distribution.png')
     plt.savefig(plot_filename)
     plt.close()
-    
-def frr_far_threshold(id_class_instance, irises, thresholds):
-    """
-    Plots FRR and FAR curves as a function of thresholds.
-
-    :param id_class_instance: Instance of the identification class.
-    :type id_class_instance: id_class
-    :param irises: List of processed iris objects to evaluate.
-    :type irises: list
-    :param thresholds: List of thresholds to evaluate.
-    :type thresholds: list or numpy.ndarray
-    """
-    frr_values = []
-    far_values = []
-
-    for threshold in thresholds:
-        tp, fp, tn, fn = 0, 0, 0, 0
-        id_class_instance.set_threshold(threshold)
-
-        for iris in irises:
-            flag, label = id_class_instance.identification(iris)
-            
-            if flag:
-                if iris.get_idx() == label:
-                    tp += 1
-                else:
-                    fp += 1
-            else:
-                if iris.get_idx() < 100:
-                    fn += 1
-                else:
-                    tn += 1
-
-        frr = fn / (fn + tp) if (fn + tp) > 0 else 0
-        far = fp / (fp + tn) if (fp + tn) > 0 else 0
-
-        frr_values.append(frr)
-        far_values.append(far)
-
-    plt.figure(figsize=(10, 6))
-    plt.plot(thresholds, frr_values, label="FRR (False Rejection Rate)", color="red")
-    plt.plot(thresholds, far_values, label="FAR (False Acceptance Rate)", color="blue")
-    plt.xlabel("Threshold", fontsize=14)
-    plt.ylabel("Rate", fontsize=14)
-    plt.title("FRR and FAR vs Threshold", fontsize=16)
-    plt.legend(fontsize=12)
-    plt.grid(alpha=0.7)
-    plt.tight_layout()
-    plt.show()
+   
 
 def iris_code_plot(iris_code, path):
     """
@@ -427,56 +354,22 @@ def iris_code_plot(iris_code, path):
     plt.plot(iris_code)
     plt.title(" IRIS CODE PLOT ")
     plt.xlabel("Index")
-    plt.ylabel("Value")    
+    plt.ylabel("Value")  
     plt.savefig(path, format="jpeg", dpi=300)
-    plt.close()
-
-def ROC_curve(far, frr, thresholds, path):
-    """
-    Plots the ROC (Receiver Operating Characteristic) curve showing the relationship between 
-    False Acceptance Rate (FAR) and False Rejection Rate (FRR) for different thresholds, and 
-    saves it as a JPEG image.
-
-    Parameters:
-    - far: A list or array containing the False Acceptance Rate values for different thresholds.
-    - frr: A list or array containing the False Rejection Rate values for different thresholds.
-    - thresholds: A list or array of threshold values corresponding to the FAR and FRR values.
-    - path: The file path where the ROC curve will be saved.
-    """
-    plt.figure()
-    plt.plot(far, frr, marker='o', label="ROC Curve")
-    for i, threshold in enumerate(thresholds):
-       plt.text(far[i], frr[i], f"Threshold:{int(threshold)}", fontsize=9)
-    plt.xlabel("FAR %")
-    plt.ylabel("FRR %")
-    plt.title("ROC CURVE")
-    plt.grid()
-    plt.legend()
-    plt.savefig(path, format="jpeg", dpi=300)
-    plt.close()
+    plt.close()  
     
-def frr_far_sift_graph(frr_values, far_values, thresholds, save_path='graph/'):
-    """
-    Plots and saves the FRR and FAR against the threshold.
 
-    :param frr_values: List of FRR values.
-    :param far_values: List of FAR values.
-    :param thresholds: List of threshold values.
-    :param save_path: Directory path to save the plot (default is 'graph/').
-    """
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
-
-    plt.figure(figsize=(10, 6))
-    plt.plot(thresholds, frr_values, label='FRR', color='red', marker='o')
-    plt.plot(thresholds, far_values, label='FAR', color='blue', marker='o')
-
-    plt.title('FRR and FAR vs Threshold')
+def plot_far_frr_vs_threshold(far, frr, thresholds, path):
+    plt.figure(figsize=(10, 5))  
+    plt.plot(thresholds, far, marker='o', color='r', label="FAR")  
+    plt.plot(thresholds, frr, marker='o', color='b', label="FRR")  
     plt.xlabel('Threshold')
     plt.ylabel('Percentage (%)')
-    plt.legend()
-
-    plot_filename = os.path.join(save_path, 'frr_far_vs_threshold.png')
-    plt.savefig(plot_filename)
+    plt.title('FAR - FRR PLOT ')  
+    plt.grid(True)
+    plt.legend(loc='best')  
+    plt.tight_layout()
+    plt.savefig(path, format="jpeg", dpi=300)
     plt.close()
-    
+
+
