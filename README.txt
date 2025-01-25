@@ -43,7 +43,7 @@ ENG ----------------------------------------------------------------------------
 MULTI-ALGORITHM IRIS RECOGNITION SYSTEM
 University of Enna "Kore"
 Department of Engineering and Architecture
-Bachelor's Degree in Artificial Intelligence Engineering and Information Security
+Master Degree in Artificial Intelligence Engineering and Information Security
 Students: Barbera Antonino, Mirotta Mauro
 Academic Year: 2024/2025
 
