@@ -87,4 +87,5 @@ if __name__ == '__main__':
    frr, far = calculate_frr_far(irises, id, None)
    print(" FAR : " + str(far) + " %")
    print(" FRR : " + str(frr) + " %")
+   print("\n")
    
