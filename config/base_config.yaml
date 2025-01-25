@@ -49,8 +49,6 @@ matching:
   stdev_r_diff: 0.15
   stdev_theta_diff: 10
   threshold: 22
-  #thresholds: [6, 12, 16 ,22, 26, 30, 38]
-  thresholds: [6, 16 , 22, 30, 38]
 
 training:
   nn:

@@ -76,12 +76,12 @@ if __name__ == '__main__':
    """
     Main execution block to process a dataset, calculate FRR and FAR, and display the results.
    """
-   print(' Loading Irises')
+   print('\nLoading irises...')
    config = configuration()
    casia_dataset = load_dataset(config)
    irises = load_irises(casia_dataset)
 
-   print(' Start Matching \n')
+   print(' \nStart Matching... \n')
 
    id = id_class(config, None)
    frr, far = calculate_frr_far(irises, id, None)

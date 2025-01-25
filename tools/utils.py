@@ -360,6 +360,16 @@ def iris_code_plot(iris_code, path):
     
 
 def plot_far_frr_vs_threshold(far, frr, thresholds, path):
+    """
+    Plots the FAR (False Acceptance Rate) and FRR (False Rejection Rate) curves
+    against the thresholds and saves the plot as a JPEG image.
+
+    Parameters:
+    - far: A list or array representing the False Acceptance Rate values.
+    - frr: A list or array representing the False Rejection Rate values.
+    - thresholds: A list or array representing the thresholds used to calculate FAR and FRR.
+    - path: The file path where the plot will be saved as a JPEG image.
+    """
     plt.figure(figsize=(10, 5))  
     plt.plot(thresholds, far, marker='o', color='r', label="FAR")  
     plt.plot(thresholds, frr, marker='o', color='b', label="FRR")  
@@ -371,5 +381,3 @@ def plot_far_frr_vs_threshold(far, frr, thresholds, path):
     plt.tight_layout()
     plt.savefig(path, format="jpeg", dpi=300)
     plt.close()
-
-
