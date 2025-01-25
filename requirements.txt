@@ -1,0 +1,12 @@
+torch
+numpy
+pandas
+addict
+pyyaml
+plotly
+kaleido
+seaborn
+matplotlib
+scikit-learn
+yaml_config_override
+opencv-contrib-python

@@ -6,7 +6,7 @@ from identification import id_class
 import warnings
 import cv2 as cv
 from tools.utils import iris_code_plot, plot_far_frr_vs_threshold
-import matplotlib.pyplot as plt
+
 
 
 warnings.filterwarnings("ignore")
@@ -67,7 +67,6 @@ def load_irises(dataset):
 
 
 def test(irises, irises_stored, threshold=None):
-   #print('\n')
    if threshold is not None:
       print(" Testing Threshold " + str(threshold) + ':')
    id = id_class(config, irises_stored)
@@ -88,13 +87,7 @@ def test(irises, irises_stored, threshold=None):
                fn += 1
             else:
                tn += 1
-   '''
-   print('\tTrue Positive ' + str(tp))
-   print('\tFalse Positive ' + str(fp))
-   print('\tTrue Negative ' + str(tn))
-   print('\tFalse Negative ' + str(fn))
-   '''
-   #print('\nPerformance achieved (' + str(tot) + ')')
+   
    accuracy = (tp + tn) / tot * 100
    far = fp / (fp + tn) * 100
    frr = fn / (fn + tp) * 100
