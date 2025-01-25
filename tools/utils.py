@@ -6,16 +6,49 @@ import os
 
 
 def distance(point_1, point_2):
+    """
+    Computes the Euclidean distance between two points in 2D space.
+
+    Parameters:
+    - point_1 (tuple): Coordinates (x, y) of the first point.
+    - point_2 (tuple): Coordinates (x, y) of the second point.
+
+    Returns:
+    - dist (float): The Euclidean distance between the two points.
+    """
     x1, y1 = point_1
     x2, y2 = point_2
     dist = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
     return dist
 
 def point_in_circle(centre, radius, point):
+    """
+    Checks if a point lies within a circle.
+
+    Parameters:
+    - centre (tuple): Coordinates (x, y) of the circle's center.
+    - radius (float): The radius of the circle.
+    - point (tuple): Coordinates (x, y) of the point to check.
+
+    Returns:
+    - bool: True if the point is within the circle, False otherwise.
+    """
     dist = distance(centre, point) 
     return dist <= radius
 
 def draw_keypoints_image(image_iris, keypoints, centre, iris_radius):
+    """
+    Draws keypoints and circles (for iris segmentation) on an image.
+
+    Parameters:
+    - image_iris (numpy.ndarray): The iris image to draw on.
+    - keypoints (list): List of keypoints to draw.
+    - centre (tuple): Coordinates (x, y) of the iris center.
+    - iris_radius (int): Radius of the iris.
+
+    Returns:
+    - keypoints_image (numpy.ndarray): Image with the drawn keypoints and circles.
+    """
     red = (0, 0, 255)
     blue = (255, 0, 0)
     keypoints_image = cv.cvtColor(image_iris.copy(), cv.COLOR_GRAY2BGR)
@@ -25,6 +58,16 @@ def draw_keypoints_image(image_iris, keypoints, centre, iris_radius):
     return keypoints_image
 
 def angle(point_1, point_2):
+    """
+    Calculates the angle between two points relative to the x-axis.
+
+    Parameters:
+    - point_1 (tuple): Coordinates (x, y) of the first point.
+    - point_2 (tuple): Coordinates (x, y) of the second point.
+
+    Returns:
+    - angle_360 (float): The angle in degrees between the two points, normalized to [0, 360).
+    """
     x1, y1 = point_1
     x2, y2 = point_2
     angle = math.degrees(math.atan2((y2 - y1), (x2 - x1)))
@@ -32,22 +75,68 @@ def angle(point_1, point_2):
     return angle_360
 
 def to_polar(point, pole=(0, 0)):
+    """
+    Converts a Cartesian coordinate to polar coordinates.
+
+    Parameters:
+    - point (tuple): Cartesian coordinates (x, y).
+    - pole (tuple): Origin of the polar coordinates (default is (0, 0)).
+
+    Returns:
+    - (r, theta): Polar coordinates (radius, angle).
+    """
     r = distance(point, pole)
     theta = angle(point, pole)
     return r, theta
 
 def normalize_r(r, pupil_radius, iris_radius):
+    """
+    Normalizes the radius value between the pupil and iris radii.
+
+    Parameters:
+    - r (float): The radius to normalize.
+    - pupil_radius (float): The radius of the pupil.
+    - iris_radius (float): The radius of the iris.
+
+    Returns:
+    - r_norm (float): The normalized radius between 0 and 1.
+    """
     range = iris_radius - pupil_radius
     r_norm = (r - pupil_radius) / range
     return r_norm
 
 def is_within_one_std(value, centre, dev):
+    """
+    Checks if a value lies within one standard deviation from the mean.
+
+    Parameters:
+    - value (float): The value to check.
+    - centre (float): The mean or center value.
+    - dev (float): The standard deviation.
+
+    Returns:
+    - bool: True if the value is within one standard deviation, False otherwise.
+    """
     not_in_left_tail = value > centre - dev
     not_in_right_tail = value < centre + dev
     is_on_range = not_in_left_tail and not_in_right_tail
     return is_on_range
 
 def warp_polar(image, x_size, y_size, centre, pupil_radius, iris_radius):
+    """
+    Warps the iris image into polar coordinates.
+
+    Parameters:
+    - image (numpy.ndarray): The iris image to warp.
+    - x_size (int): The desired width of the output image.
+    - y_size (int): The desired height of the output image.
+    - centre (tuple): Coordinates (x, y) of the center of the iris.
+    - pupil_radius (float): Radius of the pupil.
+    - iris_radius (float): Radius of the iris.
+
+    Returns:
+    - normalized_iris (numpy.ndarray): The warped polar image.
+    """
     normalized_iris=np.zeros(shape=(x_size, y_size))
     x_c, y_c = centre
         
@@ -72,6 +161,16 @@ def warp_polar(image, x_size, y_size, centre, pupil_radius, iris_radius):
     return normalized_iris
 
 def gabor_filter(theta, config):
+    """
+    Creates a Gabor filter kernel for feature extraction.
+
+    Parameters:
+    - theta (float): The orientation of the filter.
+    - config (object): Configuration object containing filter parameters.
+
+    Returns:
+    - kernel (numpy.ndarray): The generated Gabor filter kernel.
+    """
     ksize = (config.gabor_filter.x_size, config.gabor_filter.y_size)
     kernel = cv.getGaborKernel(ksize, 
                                 config.gabor_filter.gamma, 
@@ -83,6 +182,16 @@ def gabor_filter(theta, config):
     return kernel
 
 def encoding(image, config):
+    """
+    Encodes an image using Gabor filters and extracts statistical features.
+
+    Parameters:
+    - image (numpy.ndarray): The iris image to encode.
+    - config (object): Configuration object containing filter parameters.
+
+    Returns:
+    - vector (numpy.ndarray): The extracted feature vector.
+    """
     vector = []
     for theta in [0, np.pi/4, np.pi/2, 3*np.pi/4, np.pi, 5*np.pi/4, 3*np.pi/2, 7*np.pi/4]:
         gabor = gabor_filter(theta, config)
@@ -96,6 +205,21 @@ def encoding(image, config):
     return np.array(vector)
 
 def manage_best_model_and_metrics(model, evaluation_metric, metrics, best_metric, best_model, lower_is_better):
+    """
+    Updates the best model and metrics based on the evaluation metric.
+
+    Parameters:
+    - model (object): The model being evaluated.
+    - evaluation_metric (str): The metric used for evaluation (e.g., 'accuracy').
+    - metrics (dict): The metrics dictionary containing the model's performance.
+    - best_metric (float): The current best metric value.
+    - best_model (object): The current best model.
+    - lower_is_better (bool): Whether a lower metric value is better (True for loss, False for accuracy).
+
+    Returns:
+    - best_model (object): The best performing model.
+    - best_metric (float): The best performance metric.
+    """
     if lower_is_better:
         is_best = metrics[evaluation_metric] < best_metric
     else:
@@ -259,11 +383,8 @@ def frr_far_threshold(id_class_instance, irises, thresholds):
 
     for threshold in thresholds:
         tp, fp, tn, fn = 0, 0, 0, 0
-
-        # Set the threshold in the identification class
         id_class_instance.set_threshold(threshold)
 
-        # Evaluate the performance for the current threshold
         for iris in irises:
             flag, label = id_class_instance.identification(iris)
             
@@ -278,14 +399,12 @@ def frr_far_threshold(id_class_instance, irises, thresholds):
                 else:
                     tn += 1
 
-        # Calculate FRR and FAR
         frr = fn / (fn + tp) if (fn + tp) > 0 else 0
         far = fp / (fp + tn) if (fp + tn) > 0 else 0
 
         frr_values.append(frr)
         far_values.append(far)
 
-    # Plot the FRR and FAR curves
     plt.figure(figsize=(10, 6))
     plt.plot(thresholds, frr_values, label="FRR (False Rejection Rate)", color="red")
     plt.plot(thresholds, far_values, label="FAR (False Acceptance Rate)", color="blue")
@@ -298,6 +417,13 @@ def frr_far_threshold(id_class_instance, irises, thresholds):
     plt.show()
 
 def iris_code_plot(iris_code, path):
+    """
+    Plots the iris code and saves it as a JPEG image.
+
+    Parameters:
+    - iris_code: A list or array representing the iris code to be plotted.
+    - path: The file path where the plot will be saved.
+    """
     plt.plot(iris_code)
     plt.title(" IRIS CODE PLOT ")
     plt.xlabel("Index")
@@ -306,6 +432,17 @@ def iris_code_plot(iris_code, path):
     plt.close()
 
 def ROC_curve(far, frr, thresholds, path):
+    """
+    Plots the ROC (Receiver Operating Characteristic) curve showing the relationship between 
+    False Acceptance Rate (FAR) and False Rejection Rate (FRR) for different thresholds, and 
+    saves it as a JPEG image.
+
+    Parameters:
+    - far: A list or array containing the False Acceptance Rate values for different thresholds.
+    - frr: A list or array containing the False Rejection Rate values for different thresholds.
+    - thresholds: A list or array of threshold values corresponding to the FAR and FRR values.
+    - path: The file path where the ROC curve will be saved.
+    """
     plt.figure()
     plt.plot(far, frr, marker='o', label="ROC Curve")
     for i, threshold in enumerate(thresholds):
@@ -331,20 +468,15 @@ def frr_far_sift_graph(frr_values, far_values, thresholds, save_path='graph/'):
         os.makedirs(save_path)
 
     plt.figure(figsize=(10, 6))
-
-    # Plot FRR and FAR against threshold
     plt.plot(thresholds, frr_values, label='FRR', color='red', marker='o')
     plt.plot(thresholds, far_values, label='FAR', color='blue', marker='o')
 
-    # Add labels and title
     plt.title('FRR and FAR vs Threshold')
     plt.xlabel('Threshold')
     plt.ylabel('Percentage (%)')
-
-    # Show legend
     plt.legend()
 
-    # Save the plot
     plot_filename = os.path.join(save_path, 'frr_far_vs_threshold.png')
     plt.savefig(plot_filename)
-    plt.close()  # Close the plot
+    plt.close()
+    

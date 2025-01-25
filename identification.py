@@ -5,10 +5,19 @@ import cv2 as cv
 from tools.matching_score import matching_score_class
 
 class id_class:
-
+    """
+    A class to handle iris identification and matching operations.
+    """
     __slots__ = ['config', 'are_models_loaded','scaler', 'feature_reduction', 'classifier_1', 'classifier_2', 'classifier_3', 'data_dict']
 
     def __init__(self, config, data_dict=None):
+        """
+        Initializes the id_class object.
+
+        Parameters:
+        - config: Configuration object containing settings and parameters.
+        - data_dict: Optional dictionary of preloaded iris data for identification.
+        """
         self.config = config
         if data_dict is not None:
            self.are_models_loaded = True
@@ -28,6 +37,17 @@ class id_class:
 
     
     def sift_match(self, iris_1, iris_2, threshold=None):
+        """
+        Performs SIFT-based matching between two iris samples.
+
+        Parameters:
+        - iris_1: First iris object.
+        - iris_2: Second iris object.
+        - threshold: Optional matching score threshold.
+
+        Returns:
+        - flag: Boolean indicating whether the irises match.
+        """
         bf = cv.BFMatcher()
         kp_1 = iris_1.get_keypoints()
         des_1 = iris_1.get_descriptors()
@@ -54,8 +74,20 @@ class id_class:
             flag = False
         return flag
     
+    
     def identification(self, iris, threshold):
-        
+        """
+        Identifies an iris by comparing it to known data.
+
+        Parameters:
+        - iris: The iris object to identify.
+        - threshold: Matching threshold to determine a match.
+
+        Returns:
+        - result: A tuple (is_match, label).
+            - is_match: True if a match is found, False otherwise.
+            - label: The identifier of the matched iris, or None if no match.
+        """
         if not self.are_models_loaded:
             print(' MODELS ARE NOT UPLOADED --- RUN models_generation.py')
             sys.exit()

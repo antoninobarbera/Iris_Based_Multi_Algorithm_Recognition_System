@@ -80,6 +80,15 @@ def configuration(main_path=None):
     return config
 
 def load_dataset(config):
+    '''
+    Loads the CASIA dataset from the 'dataset' directory.
+    
+    Args:
+    - config (addict.Dict): Configuration object containing parameters.
+    
+    Returns:
+    - list: A list of records from the CASIA dataset.
+    '''
     dataset_path = 'dataset'
     casia_path = os.path.join(dataset_path, 'CASIA.pkl')
         

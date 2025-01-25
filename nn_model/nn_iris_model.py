@@ -2,12 +2,13 @@ import torch
 import numpy as np
 from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-
 from tools.utils import manage_best_model_and_metrics
+
 
 class nn_classifier_class():
 
     __slots__ = ['config', 'model', 'device', 'criterion', 'batch_size', 'optimizer', 'lower_is_better', 'best_metric']
+
 
     def __init__(self, model, config):
         self.config = config.training.nn
@@ -27,6 +28,7 @@ class nn_classifier_class():
                 self.best_metric = float('inf')
         else:
             self.best_metric = float('-inf')
+
 
     def fit(self, X, y):
         X_ten = torch.tensor(X, dtype=torch.float32) 
@@ -104,6 +106,7 @@ class nn_classifier_class():
                 predictions.extend(pred.cpu().numpy())
         predictions_np_array = np.array(predictions)
         return predictions_np_array
+    
     
     def load_weights(self, weights_path):
         if self.config.want_to_use_cuda and torch.cuda.is_available():

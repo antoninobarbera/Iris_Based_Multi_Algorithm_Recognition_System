@@ -18,6 +18,7 @@ class iris_network(nn.Module):
 
         self.fc4 = nn.Linear(128, num_classes)
 
+
     def forward(self, x):
         x = self.fc1(x)
         x = self.bn1(x)
